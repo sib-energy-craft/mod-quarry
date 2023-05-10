@@ -1,6 +1,7 @@
 package com.github.sib_energy_craft.drilling_rig.tags;
 
 import com.github.sib_energy_craft.energy_api.utils.Identifiers;
+import com.github.sib_energy_craft.sec_utils.utils.TagUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.minecraft.block.Block;
@@ -28,6 +29,6 @@ public final class DrillingRigTags {
      * @return true - not mine block, false - otherwise
      */
     public static boolean isDrillingRigIgnore(@NotNull BlockState blockState) {
-        return blockState.streamTags().anyMatch((it) -> it.equals(DRILLING_RIG_IGNORE));
+        return TagUtils.hasTag(DRILLING_RIG_IGNORE, blockState);
     }
 }

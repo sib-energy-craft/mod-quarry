@@ -6,8 +6,11 @@ import com.github.sib_energy_craft.drilling_rig.tags.DrillingRigTags;
 import com.github.sib_energy_craft.energy_api.Energy;
 import com.github.sib_energy_craft.energy_api.EnergyOffer;
 import com.github.sib_energy_craft.energy_api.consumer.EnergyConsumer;
+import com.github.sib_energy_craft.energy_api.items.ChargeableItem;
 import com.github.sib_energy_craft.pipes.api.ItemSupplier;
 import com.github.sib_energy_craft.pipes.utils.PipeUtils;
+import com.github.sib_energy_craft.sec_utils.screen.PropertyMap;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -16,6 +19,8 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -32,10 +37,17 @@ import java.util.List;
  * @author sibmaks
  */
 public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingRigBlock> extends BlockEntity
-        implements EnergyConsumer, ItemSupplier {
-    public static final int INVENTORY_SIZE = 9;
+        implements ExtendedScreenHandlerFactory, EnergyConsumer, ItemSupplier {
+    public static final int TOOL_SLOT = 0;
+    public static final int CHARGE_SLOT = 1;
 
-    protected final SimpleInventory inventory;
+    public static final int TOOLS_INVENTORY_SIZE = 2;
+    public static final int MINING_INVENTORY_SIZE = 9;
+
+    protected final SimpleInventory toolInventory;
+    protected final SimpleInventory miningInventory;
+    protected final PropertyMap<DrillingRigProperties> propertyMap;
+
     protected CleanEnergyContainer energyContainer;
 
     protected final B block;
@@ -47,16 +59,31 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                                             @NotNull BlockState blockState,
                                             @NotNull B block) {
         super(blockEntityType, blockPos, blockState);
-        this.inventory = new SimpleInventory(INVENTORY_SIZE);
-        this.inventory.addListener(sender -> AbstractDrillingRigBlockEntity.this.markDirty());
+
+        this.toolInventory = new SimpleInventory(TOOLS_INVENTORY_SIZE);
+        this.toolInventory.addListener(sender -> AbstractDrillingRigBlockEntity.this.markDirty());
+
+        this.miningInventory = new SimpleInventory(MINING_INVENTORY_SIZE);
+        this.miningInventory.addListener(sender -> AbstractDrillingRigBlockEntity.this.markDirty());
+
         this.energyContainer = new CleanEnergyContainer(Energy.ZERO, block.getMaxCharge());
         this.block = block;
+
+        this.propertyMap = new PropertyMap<>(DrillingRigProperties.class);
+        this.propertyMap.add(DrillingRigProperties.CHARGE, () -> this.energyContainer.getCharge().intValue());
+        this.propertyMap.add(DrillingRigProperties.MAX_CHARGE, () -> this.energyContainer.getMaxCharge().intValue());
     }
 
     @Override
     public void readNbt(@NotNull NbtCompound nbt) {
         super.readNbt(nbt);
-        Inventories.readNbt(nbt, this.inventory.stacks);
+
+        var toolInventoryCompound = nbt.getCompound("ToolInventory");
+        Inventories.readNbt(toolInventoryCompound, this.toolInventory.stacks);
+
+        var miningInventoryCompound = nbt.getCompound("MiningInventory");
+        Inventories.readNbt(miningInventoryCompound, this.miningInventory.stacks);
+
         this.energyContainer = CleanEnergyContainer.readNbt(nbt);
         this.chargedHardness = nbt.getFloat("ChargedHardness");
     }
@@ -64,7 +91,15 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
     @Override
     protected void writeNbt(@NotNull NbtCompound nbt) {
         super.writeNbt(nbt);
-        Inventories.writeNbt(nbt, this.inventory.stacks);
+
+        var toolInventoryCompound = new NbtCompound();
+        Inventories.writeNbt(toolInventoryCompound, this.toolInventory.stacks);
+        nbt.put("ToolInventory", toolInventoryCompound);
+
+        var miningInventoryCompound = new NbtCompound();
+        Inventories.writeNbt(miningInventoryCompound, this.miningInventory.stacks);
+        nbt.put("MiningInventory", miningInventoryCompound);
+
         this.energyContainer.writeNbt(nbt);
         nbt.putFloat("ChargedHardness", this.chargedHardness);
     }
@@ -114,6 +149,8 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         var fulled = state.get(AbstractDrillingRigBlock.FULL);
         var full = false;
 
+        charge(blockEntity);
+
         if (blockEntity.energyContainer.hasEnergy()) {
             var underLineBlockStatePos = getUnderlineBlock(world, pos);
             if(underLineBlockStatePos != null) {
@@ -123,11 +160,11 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                 if(hardness <= blockEntity.chargedHardness) {
                     var miningItem = underLineBlockState.getBlock().asItem();
                     var miningItemStack = new ItemStack(miningItem, 1);
-                    if(miningItemStack.isEmpty() || blockEntity.inventory.canInsert(miningItemStack)) {
+                    if(miningItemStack.isEmpty() || blockEntity.miningInventory.canInsert(miningItemStack)) {
                         blockEntity.chargedHardness -= hardness;
                         world.breakBlock(underLineBlockPos, false);
                         if (!miningItemStack.isEmpty()) {
-                            blockEntity.inventory.addStack(miningItemStack);
+                            blockEntity.miningInventory.addStack(miningItemStack);
                         }
                     } else {
                         full = true;
@@ -159,6 +196,19 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         }
     }
 
+    private static void charge(@NotNull AbstractDrillingRigBlockEntity<?> blockEntity) {
+        var itemStack = blockEntity.toolInventory.getStack(CHARGE_SLOT);
+        var item = itemStack.getItem();
+        if (!itemStack.isEmpty() && (item instanceof ChargeableItem chargeableItem)) {
+            int charge = chargeableItem.getCharge(itemStack);
+            if (charge > 0) {
+                int transferred = Math.min(charge, blockEntity.energyContainer.getFreeSpace().intValue());
+                chargeableItem.discharge(itemStack, transferred);
+                blockEntity.energyContainer.add(transferred);
+            }
+        }
+    }
+
     @Nullable
     private static Pair<BlockState, BlockPos> getUnderlineBlock(@NotNull World world, @NotNull BlockPos blockPos) {
         while (blockPos.getY() > world.getBottomY()) {
@@ -174,17 +224,21 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
     }
 
     @Override
+    public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+    }
+
+    @Override
     public @NotNull List<ItemStack> canSupply(@NotNull Direction direction) {
-        return Collections.unmodifiableList(inventory.stacks);
+        return Collections.unmodifiableList(miningInventory.stacks);
     }
 
     @Override
     public boolean supply(@NotNull ItemStack requested, @NotNull Direction direction) {
-        return PipeUtils.supply(inventory, requested);
+        return PipeUtils.supply(miningInventory, requested);
     }
 
     @Override
     public void returnStack(@NotNull ItemStack requested, @NotNull Direction direction) {
-        inventory.addStack(requested);
+        miningInventory.addStack(requested);
     }
 }

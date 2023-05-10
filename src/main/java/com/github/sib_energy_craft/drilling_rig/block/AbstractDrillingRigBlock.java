@@ -11,6 +11,7 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.state.StateManager;
@@ -84,7 +85,10 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
         if (world.isClient) {
             return ActionResult.SUCCESS;
         }
-        this.openScreen(world, pos, player);
+        var blockEntity = world.getBlockEntity(pos);
+        if (blockEntity instanceof AbstractDrillingRigBlockEntity<?> abstractDrillingRigBlockEntity) {
+            player.openHandledScreen(abstractDrillingRigBlockEntity);
+        }
         return ActionResult.CONSUME;
     }
 
@@ -121,15 +125,17 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
         return BlockRenderType.MODEL;
     }
 
+    @NotNull
+    @Override
+    public BlockState getPlacementState(@NotNull ItemPlacementContext ctx) {
+        var playerLookDirection = ctx.getPlayerLookDirection();
+        return this.getDefaultState().with(FACING, playerLookDirection.getOpposite());
+    }
+
     @Override
     protected void appendProperties(@NotNull StateManager.Builder<Block, BlockState> builder) {
         builder.add(WORKING, FULL, FACING);
     }
-
-    protected abstract void openScreen(@NotNull World world,
-                                       @NotNull BlockPos pos,
-                                       @NotNull PlayerEntity player);
-
 
     @Nullable
     protected static <T extends BlockEntity,

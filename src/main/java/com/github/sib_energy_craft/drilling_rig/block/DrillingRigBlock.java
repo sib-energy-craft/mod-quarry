@@ -8,7 +8,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
@@ -25,11 +24,6 @@ public class DrillingRigBlock extends AbstractDrillingRigBlock {
                             float energyToHardnessRate,
                             @NotNull Energy energyPerMine) {
         super(settings, energyLevel, maxCharge, energyToHardnessRate, energyPerMine);
-    }
-
-    @Override
-    protected void openScreen(@NotNull World world, @NotNull BlockPos pos, @NotNull PlayerEntity player) {
-
     }
 
     @NotNull
