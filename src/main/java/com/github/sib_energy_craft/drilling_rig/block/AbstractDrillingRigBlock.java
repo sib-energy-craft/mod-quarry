@@ -32,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
     public static final DirectionProperty FACING = HorizontalFacingBlock.FACING;
     public static final BooleanProperty WORKING = BooleanProperty.of("working");
+    public static final BooleanProperty FULL = BooleanProperty.of("full");
 
     @Getter
     private final EnergyLevel energyLevel;
@@ -54,7 +55,9 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
         this.energyPerMine = energyPerMine;
         this.setDefaultState(this.stateManager.getDefaultState()
                 .with(FACING, Direction.NORTH)
-                .with(WORKING, false));
+                .with(WORKING, false)
+                .with(FULL, false))
+        ;
     }
 
     @Override
@@ -120,7 +123,7 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
 
     @Override
     protected void appendProperties(@NotNull StateManager.Builder<Block, BlockState> builder) {
-        builder.add(WORKING, FACING);
+        builder.add(WORKING, FULL, FACING);
     }
 
     protected abstract void openScreen(@NotNull World world,

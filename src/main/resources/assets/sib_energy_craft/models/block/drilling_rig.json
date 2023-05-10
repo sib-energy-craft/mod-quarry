@@ -1,8 +1,9 @@
 {
-  "parent": "minecraft:block/orientable",
+  "parent": "minecraft:block/orientable_with_bottom",
   "textures": {
-    "top": "sib_energy_craft:block/drilling_rig_top",
+    "top": "sib_energy_craft:block/drilling_rig_side",
     "front": "sib_energy_craft:block/drilling_rig_front",
-    "side": "sib_energy_craft:block/drilling_rig_side"
+    "side": "sib_energy_craft:block/drilling_rig_side",
+    "bottom": "sib_energy_craft:block/drilling_rig_bottom"
   }
 }

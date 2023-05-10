@@ -1,33 +1,63 @@
 {
   "variants": {
-    "facing=east,working=false": {
+    "facing=east,working=false,full=false": {
       "model": "sib_energy_craft:block/drilling_rig",
       "y": 90
     },
-    "facing=east,working=true": {
+    "facing=east,working=true,full=false": {
       "model": "sib_energy_craft:block/drilling_rig_on",
       "y": 90
     },
-    "facing=north,working=false": {
+    "facing=east,working=false,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
+      "y": 90
+    },
+    "facing=east,working=true,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
+      "y": 90
+    },
+    "facing=north,working=false,full=false": {
       "model": "sib_energy_craft:block/drilling_rig"
     },
-    "facing=north,working=true": {
+    "facing=north,working=true,full=false": {
       "model": "sib_energy_craft:block/drilling_rig_on"
     },
-    "facing=south,working=false": {
+    "facing=north,working=false,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full"
+    },
+    "facing=north,working=true,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full"
+    },
+    "facing=south,working=false,full=false": {
       "model": "sib_energy_craft:block/drilling_rig",
       "y": 180
     },
-    "facing=south,working=true": {
+    "facing=south,working=true,full=false": {
       "model": "sib_energy_craft:block/drilling_rig_on",
       "y": 180
     },
-    "facing=west,working=false": {
+    "facing=south,working=false,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
+      "y": 180
+    },
+    "facing=south,working=true,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
+      "y": 180
+    },
+    "facing=west,working=false,full=false": {
       "model": "sib_energy_craft:block/drilling_rig",
       "y": 270
     },
-    "facing=west,working=true": {
+    "facing=west,working=true,full=false": {
       "model": "sib_energy_craft:block/drilling_rig_on",
+      "y": 270
+    },
+    "facing=west,working=false,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
+      "y": 270
+    },
+    "facing=west,working=true,full=true": {
+      "model": "sib_energy_craft:block/drilling_rig_full",
       "y": 270
     }
   }

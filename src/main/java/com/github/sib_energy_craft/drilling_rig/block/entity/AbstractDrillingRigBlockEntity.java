@@ -15,7 +15,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
@@ -38,7 +37,6 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
     protected final SimpleInventory inventory;
     protected CleanEnergyContainer energyContainer;
-    protected boolean working;
 
     protected final B block;
     protected float chargedHardness;
@@ -111,8 +109,10 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         }
         var hasEnergy = blockEntity.energyContainer.hasEnergy();
         var changed = false;
-        var working = blockEntity.working;
-        blockEntity.working = false;
+        var worked = state.get(AbstractDrillingRigBlock.WORKING);
+        var working = false;
+        var fulled = state.get(AbstractDrillingRigBlock.FULL);
+        var full = false;
 
         if (blockEntity.energyContainer.hasEnergy()) {
             var underLineBlockStatePos = getUnderlineBlock(world, pos);
@@ -121,24 +121,37 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                 var underLineBlockPos = underLineBlockStatePos.getRight();
                 float hardness = underLineBlockState.getHardness(world, underLineBlockPos);
                 if(hardness <= blockEntity.chargedHardness) {
-                    blockEntity.chargedHardness -= hardness;
-                    world.breakBlock(underLineBlockPos, false);
-                    var item = underLineBlockState.getBlock().asItem();
-                    if(item != null && Items.AIR != item) {
-                        blockEntity.inventory.addStack(new ItemStack(item, 1));
+                    var miningItem = underLineBlockState.getBlock().asItem();
+                    var miningItemStack = new ItemStack(miningItem, 1);
+                    if(miningItemStack.isEmpty() || blockEntity.inventory.canInsert(miningItemStack)) {
+                        blockEntity.chargedHardness -= hardness;
+                        world.breakBlock(underLineBlockPos, false);
+                        if (!miningItemStack.isEmpty()) {
+                            blockEntity.inventory.addStack(miningItemStack);
+                        }
+                    } else {
+                        full = true;
                     }
                 } else {
                     blockEntity.energyContainer.subtract(blockEntity.block.getEnergyPerMine());
                     blockEntity.chargedHardness += blockEntity.block.getEnergyToHardnessRate();
                 }
                 changed = true;
-                blockEntity.working = true;
+                working = true;
             }
             blockEntity.markDirty();
         }
 
-        if (working != blockEntity.working) {
-            state = state.with(AbstractDrillingRigBlock.WORKING, blockEntity.working);
+        var stateChanged = false;
+        if (worked != working) {
+            state = state.with(AbstractDrillingRigBlock.WORKING, working);
+            stateChanged = true;
+        }
+        if (fulled != full) {
+            state = state.with(AbstractDrillingRigBlock.FULL, full);
+            stateChanged = true;
+        }
+        if(stateChanged) {
             world.setBlockState(pos, state, Block.NOTIFY_ALL);
         }
         if (hasEnergy != blockEntity.energyContainer.hasEnergy() || changed) {
