@@ -2,7 +2,6 @@ package com.github.sib_energy_craft.drilling_rig.block;
 
 import com.github.sib_energy_craft.drilling_rig.block.entity.DrillingRigBlockEntity;
 import com.github.sib_energy_craft.drilling_rig.load.Entities;
-import com.github.sib_energy_craft.energy_api.Energy;
 import com.github.sib_energy_craft.energy_api.EnergyLevel;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -21,9 +20,9 @@ public class DrillingRigBlock extends AbstractDrillingRigBlock {
     public DrillingRigBlock(@NotNull Settings settings,
                             @NotNull EnergyLevel energyLevel,
                             int maxCharge,
-                            float energyToHardnessRate,
-                            @NotNull Energy energyPerMine) {
-        super(settings, energyLevel, maxCharge, energyToHardnessRate, energyPerMine);
+                            float mineSpeedMultiplier,
+                            float energyPerMineMultiplier) {
+        super(settings, energyLevel, maxCharge, mineSpeedMultiplier, energyPerMineMultiplier);
     }
 
     @NotNull

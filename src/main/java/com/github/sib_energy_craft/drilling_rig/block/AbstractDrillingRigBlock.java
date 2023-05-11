@@ -1,7 +1,6 @@
 package com.github.sib_energy_craft.drilling_rig.block;
 
 import com.github.sib_energy_craft.drilling_rig.block.entity.AbstractDrillingRigBlockEntity;
-import com.github.sib_energy_craft.energy_api.Energy;
 import com.github.sib_energy_craft.energy_api.EnergyLevel;
 import com.github.sib_energy_craft.energy_api.items.ChargeableItem;
 import lombok.Getter;
@@ -40,20 +39,20 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
     @Getter
     private final int maxCharge;
     @Getter
-    private final float energyToHardnessRate;
+    private final float mineSpeedMultiplier;
     @Getter
-    private final Energy energyPerMine;
+    private final float energyPerMineMultiplier;
 
     public AbstractDrillingRigBlock(@NotNull Settings settings,
                                     @NotNull EnergyLevel energyLevel,
                                     int maxCharge,
-                                    float energyToHardnessRate,
-                                    @NotNull Energy energyPerMine) {
+                                    float mineSpeedMultiplier,
+                                    float energyPerMineMultiplier) {
         super(settings);
         this.energyLevel = energyLevel;
         this.maxCharge = maxCharge;
-        this.energyToHardnessRate = energyToHardnessRate;
-        this.energyPerMine = energyPerMine;
+        this.mineSpeedMultiplier = mineSpeedMultiplier;
+        this.energyPerMineMultiplier = energyPerMineMultiplier;
         this.setDefaultState(this.stateManager.getDefaultState()
                 .with(FACING, Direction.NORTH)
                 .with(WORKING, false)

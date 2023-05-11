@@ -1,7 +1,6 @@
 package com.github.sib_energy_craft.drilling_rig.load;
 
 import com.github.sib_energy_craft.drilling_rig.block.DrillingRigBlock;
-import com.github.sib_energy_craft.energy_api.Energy;
 import com.github.sib_energy_craft.energy_api.EnergyLevel;
 import com.github.sib_energy_craft.energy_api.utils.Identifiers;
 import com.github.sib_energy_craft.sec_utils.common.Identified;
@@ -27,7 +26,7 @@ public final class Blocks implements ModRegistrar {
                 .requiresTool()
                 .sounds(BlockSoundGroup.METAL);
 
-        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024, 0.05f, Energy.of(8));
+        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.85f, 0.8f);
         DRILLING_RIG = BlockUtils.register(Identifiers.of("drilling_rig"), drillingBlock);
     }
 }
