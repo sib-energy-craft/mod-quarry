@@ -1,7 +1,7 @@
 package com.github.sib_energy_craft.drilling_rig.load;
 
 import com.github.sib_energy_craft.drilling_rig.item.DrillingRigItem;
-import com.github.sib_energy_craft.sec_utils.load.ModRegistrar;
+import com.github.sib_energy_craft.sec_utils.load.DefaultModInitializer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
 
@@ -12,7 +12,7 @@ import static com.github.sib_energy_craft.sec_utils.utils.ItemUtils.register;
  * @since 0.0.1
  * @author sibmaks
  */
-public final class Items implements ModRegistrar {
+public final class Items implements DefaultModInitializer {
     public static final Item DRILLING_RIG;
 
     static {
