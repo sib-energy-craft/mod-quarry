@@ -18,15 +18,15 @@ import java.awt.*;
  * @author sibmaks
  */
 public class DrillingRigScreen extends HandledScreen<DrillingRigScreenHandler> {
-    private static final int MOVE_LEFT_X = 5;
-    private static final int MOVE_RIGHT_X = 29;
-    private static final int MOVE_UP_X = 17;
-    private static final int MOVE_DOWN_X = 17;
+    private static final int MOVE_LEFT_X = 4;
+    private static final int MOVE_RIGHT_X = 28;
+    private static final int MOVE_UP_X = 16;
+    private static final int MOVE_DOWN_X = 16;
 
-    private static final int WIDTH_UP_X = 55;
-    private static final int WIDTH_DOWN_X = 66;
-    private static final int HEIGHT_UP_X = 55;
-    private static final int HEIGHT_DOWN_X = 66;
+    private static final int WIDTH_UP_X = 56;
+    private static final int WIDTH_DOWN_X = 67;
+    private static final int HEIGHT_UP_X = 56;
+    private static final int HEIGHT_DOWN_X = 67;
 
     private static final Identifier TEXTURE = Identifiers.of("textures/gui/container/drilling_rig.png");
 
@@ -108,11 +108,11 @@ public class DrillingRigScreen extends HandledScreen<DrillingRigScreenHandler> {
         this.textRenderer.drawWithShadow(matrices, offsetText, x + offsetTextX, y + 18, whiteRgb);
 
         var widthText = Text.translatable("screen.drilling_rig.width", size.x);
-        int widthTextX = MOVE_RIGHT_X + (23 - textRenderer.getWidth(widthText)) / 2;
+        int widthTextX = MOVE_RIGHT_X + (28 - textRenderer.getWidth(widthText)) / 2;
         this.textRenderer.drawWithShadow(matrices, widthText, x + widthTextX, y + 36, whiteRgb);
 
         var heightText = Text.translatable("screen.drilling_rig.height", size.y);
-        int heightTextX = MOVE_RIGHT_X + (23 - textRenderer.getWidth(heightText)) / 2;
+        int heightTextX = MOVE_RIGHT_X + (28 - textRenderer.getWidth(heightText)) / 2;
         this.textRenderer.drawWithShadow(matrices, heightText, x + heightTextX, y + 60, whiteRgb);
 
         if(mouseX >= x + 84 && mouseX <= x + 84 + 7 &&

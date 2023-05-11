@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " # ",
+    "CBC",
+    " P "
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:chest"
+    },
+    "B": {
+      "item": "sib_energy_craft:base_machine_body"
+    },
+    "C": {
+      "item": "sib_energy_craft:energy_circuit"
+    },
+    "P": {
+      "item": "sib_energy_craft:iron_pipe"
+    }
+  },
+  "result": {
+    "item": "sib_energy_craft:drilling_rig"
+  }
+}
