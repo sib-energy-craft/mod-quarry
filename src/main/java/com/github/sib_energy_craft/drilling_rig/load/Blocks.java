@@ -26,7 +26,7 @@ public final class Blocks implements ModRegistrar {
                 .requiresTool()
                 .sounds(BlockSoundGroup.METAL);
 
-        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.85f, 0.8f);
+        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.95f, 0.8f);
         DRILLING_RIG = BlockUtils.register(Identifiers.of("drilling_rig"), drillingBlock);
     }
 }

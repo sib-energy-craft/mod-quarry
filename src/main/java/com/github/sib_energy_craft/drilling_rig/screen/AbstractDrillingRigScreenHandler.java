@@ -12,44 +12,53 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.screen.*;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2i;
 
 /**
  * @since 0.0.1
  * @author sibmaks
  */
 public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
+    private static final DrillingRigScreenButton[] BUTTONS = DrillingRigScreenButton.values();
+
     private final Inventory miningInventory;
     private final PropertyDelegate propertyDelegate;
     protected final World world;
     protected final SlotGroupsMeta slotGroupsMeta;
+    protected final ScreenHandlerContext context;
 
     protected AbstractDrillingRigScreenHandler(@NotNull ScreenHandlerType<?> type,
-                                                 int syncId,
-                                                 @NotNull PlayerInventory playerInventory) {
-        this(type, syncId, playerInventory, new SimpleInventory(2), new SimpleInventory(9),
-                new ArrayPropertyDelegate(2));
+                                               int syncId,
+                                               @NotNull PlayerInventory playerInventory) {
+        this(type,
+                syncId,
+                playerInventory,
+                new SimpleInventory(2),
+                new SimpleInventory(9),
+                new ArrayPropertyDelegate(6),
+                ScreenHandlerContext.EMPTY
+        );
     }
 
     protected AbstractDrillingRigScreenHandler(@NotNull ScreenHandlerType<?> type,
-                                                 int syncId,
-                                                 @NotNull PlayerInventory playerInventory,
-                                                 @NotNull Inventory toolInventory,
-                                                 @NotNull Inventory miningInventory,
-                                                 @NotNull PropertyDelegate propertyDelegate) {
+                                               int syncId,
+                                               @NotNull PlayerInventory playerInventory,
+                                               @NotNull Inventory toolInventory,
+                                               @NotNull Inventory miningInventory,
+                                               @NotNull PropertyDelegate propertyDelegate,
+                                               @NotNull ScreenHandlerContext context) {
         super(type, syncId);
         checkSize(toolInventory, AbstractDrillingRigBlockEntity.TOOLS_INVENTORY_SIZE);
         checkSize(miningInventory, AbstractDrillingRigBlockEntity.MINING_INVENTORY_SIZE);
-        checkDataCount(propertyDelegate, 2);
+        checkDataCount(propertyDelegate, 6);
         this.miningInventory = miningInventory;
         this.propertyDelegate = propertyDelegate;
         this.world = playerInventory.player.world;
+        this.context = context;
 
         int globalSlotIndex = 0;
         var slotGroupsBuilder = SlotGroupsMetaBuilder.builder();
@@ -138,6 +147,28 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
     }
 
     /**
+     * Get start position
+     *
+     * @return start position
+     */
+    public Vector2i getStartPosition() {
+        int x = propertyDelegate.get(DrillingRigProperties.START_POSITION_X.ordinal());
+        int y = propertyDelegate.get(DrillingRigProperties.START_POSITION_Y.ordinal());
+        return new Vector2i(x, y);
+    }
+
+    /**
+     * Get size
+     *
+     * @return size
+     */
+    public Vector2i getSize() {
+        int x = propertyDelegate.get(DrillingRigProperties.WIDTH.ordinal());
+        int y = propertyDelegate.get(DrillingRigProperties.HEIGHT.ordinal());
+        return new Vector2i(x, y);
+    }
+
+    /**
      * Get extractor max charge
      *
      * @return max charge
@@ -201,6 +232,88 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
             slot.onTakeItem(player, slotStack);
         }
         return itemStack;
+    }
+
+    @Override
+    public boolean onButtonClick(PlayerEntity player, int id) {
+        var rigScreenButton = BUTTONS[id];
+        if(rigScreenButton == DrillingRigScreenButton.MOVE_RIGHT) {
+            moveLeftRight(false);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.MOVE_LEFT) {
+            moveLeftRight(true);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.MOVE_UP) {
+            moveUpDown(true);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.MOVE_DOWN) {
+            moveUpDown(false);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.WIDTH_UP) {
+            changeWidth(true);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.WIDTH_DOWN) {
+            changeWidth(false);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.HEIGHT_UP) {
+            changeHeight(true);
+            return true;
+        }
+        if(rigScreenButton == DrillingRigScreenButton.HEIGHT_DOWN) {
+            changeHeight(false);
+            return true;
+        }
+        return false;
+    }
+
+    private void moveLeftRight(boolean moveLeft) {
+        var oldPosition = propertyDelegate.get(DrillingRigProperties.START_POSITION_X.ordinal());
+        propertyDelegate.set(DrillingRigProperties.START_POSITION_X.ordinal(), moveLeft ? oldPosition - 1 : oldPosition + 1);
+        this.context.run((world, pos) -> {
+            var blockEntity = world.getBlockEntity(pos);
+            if(blockEntity instanceof AbstractDrillingRigBlockEntity<?> drillingRigBlockEntity) {
+                drillingRigBlockEntity.moveLeftRight(moveLeft);
+            }
+        });
+    }
+
+    private void moveUpDown(boolean moveUp) {
+        var oldPosition = propertyDelegate.get(DrillingRigProperties.START_POSITION_Y.ordinal());
+        propertyDelegate.set(DrillingRigProperties.START_POSITION_Y.ordinal(), moveUp ? oldPosition - 1 : oldPosition + 1);
+        this.context.run((world, pos) -> {
+            var blockEntity = world.getBlockEntity(pos);
+            if(blockEntity instanceof AbstractDrillingRigBlockEntity<?> drillingRigBlockEntity) {
+                drillingRigBlockEntity.moveUpDown(moveUp);
+            }
+        });
+    }
+
+    private void changeWidth(boolean increase) {
+        var old = propertyDelegate.get(DrillingRigProperties.WIDTH.ordinal());
+        propertyDelegate.set(DrillingRigProperties.WIDTH.ordinal(), increase ? old + 1 : old - 1);
+        this.context.run((world, pos) -> {
+            var blockEntity = world.getBlockEntity(pos);
+            if(blockEntity instanceof AbstractDrillingRigBlockEntity<?> drillingRigBlockEntity) {
+                drillingRigBlockEntity.changeWidth(increase);
+            }
+        });
+    }
+
+    private void changeHeight(boolean increase) {
+        var old = propertyDelegate.get(DrillingRigProperties.HEIGHT.ordinal());
+        propertyDelegate.set(DrillingRigProperties.HEIGHT.ordinal(), increase ? old + 1 : old - 1);
+        this.context.run((world, pos) -> {
+            var blockEntity = world.getBlockEntity(pos);
+            if(blockEntity instanceof AbstractDrillingRigBlockEntity<?> drillingRigBlockEntity) {
+                drillingRigBlockEntity.changeHeight(increase);
+            }
+        });
     }
 
     protected boolean insertItem(@NotNull ItemStack slotStack,

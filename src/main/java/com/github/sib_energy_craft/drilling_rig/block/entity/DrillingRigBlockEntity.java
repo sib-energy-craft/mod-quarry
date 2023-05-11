@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,7 @@ public class DrillingRigBlockEntity extends AbstractDrillingRigBlockEntity<Drill
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return new DrillingRigScreenHandler(syncId, playerInventory, toolInventory, miningInventory, propertyMap);
+        return new DrillingRigScreenHandler(syncId, playerInventory, toolInventory, miningInventory, propertyMap,
+                ScreenHandlerContext.create(world, pos));
     }
 }

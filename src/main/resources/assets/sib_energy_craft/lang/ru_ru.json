@@ -1,4 +1,8 @@
 {
   "block.sib_energy_craft.drilling_rig": "Буровая установка",
-  "container.drilling_rig": "Буровая установка"
+  "container.drilling_rig": "Буровая установка",
+
+  "screen.drilling_rig.offset": "Отступ: %d; %d",
+  "screen.drilling_rig.width": "Ш: %d",
+  "screen.drilling_rig.height": "В: %d"
 }

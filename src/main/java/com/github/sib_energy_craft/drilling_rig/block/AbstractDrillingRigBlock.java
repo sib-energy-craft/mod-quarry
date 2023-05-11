@@ -127,8 +127,8 @@ public abstract class AbstractDrillingRigBlock extends BlockWithEntity {
     @NotNull
     @Override
     public BlockState getPlacementState(@NotNull ItemPlacementContext ctx) {
-        var playerLookDirection = ctx.getPlayerLookDirection();
-        return this.getDefaultState().with(FACING, playerLookDirection.getOpposite());
+        var horizontalPlayerFacing = ctx.getHorizontalPlayerFacing();
+        return this.getDefaultState().with(FACING, horizontalPlayerFacing.getOpposite());
     }
 
     @Override

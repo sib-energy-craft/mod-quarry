@@ -34,6 +34,8 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector2i;
+import org.joml.Vector3i;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +46,9 @@ import java.util.List;
  */
 public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingRigBlock> extends BlockEntity
         implements ExtendedScreenHandlerFactory, EnergyConsumer, ItemSupplier {
+    public static final int MAX_OFFSET = 9;
+    public static final int MAX_SIZE = 64;
+
     public static final int TOOL_SLOT = 0;
     public static final int CHARGE_SLOT = 1;
 
@@ -58,12 +63,21 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
     protected final B block;
     protected int chargedTicks;
+    private volatile boolean needRecalculate;
+
+    private final Vector2i leftBottomOffset;
+    private final Vector2i sizeRectangle;
+
+    private final Vector3i startPosition;
+    private final Vector3i endPosition;
+
+    private final Vector3i currentPosition;
 
 
     public AbstractDrillingRigBlockEntity(@NotNull BlockEntityType<?> blockEntityType,
-                                            @NotNull BlockPos blockPos,
-                                            @NotNull BlockState blockState,
-                                            @NotNull B block) {
+                                          @NotNull BlockPos blockPos,
+                                          @NotNull BlockState blockState,
+                                          @NotNull B block) {
         super(blockEntityType, blockPos, blockState);
 
         this.toolInventory = new SimpleInventory(TOOLS_INVENTORY_SIZE);
@@ -74,10 +88,20 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
         this.energyContainer = new CleanEnergyContainer(Energy.ZERO, block.getMaxCharge());
         this.block = block;
+        this.leftBottomOffset = new Vector2i(0, 0);
+        this.sizeRectangle = new Vector2i(1, 1);
+        this.currentPosition = new Vector3i(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        this.startPosition = new Vector3i(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        this.endPosition = new Vector3i(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        this.recalculateMingArea(blockPos, blockState);
 
         this.propertyMap = new PropertyMap<>(DrillingRigProperties.class);
         this.propertyMap.add(DrillingRigProperties.CHARGE, () -> this.energyContainer.getCharge().intValue());
         this.propertyMap.add(DrillingRigProperties.MAX_CHARGE, () -> this.energyContainer.getMaxCharge().intValue());
+        this.propertyMap.add(DrillingRigProperties.START_POSITION_X, () -> leftBottomOffset.x);
+        this.propertyMap.add(DrillingRigProperties.START_POSITION_Y, () -> leftBottomOffset.y);
+        this.propertyMap.add(DrillingRigProperties.WIDTH, () -> sizeRectangle.x);
+        this.propertyMap.add(DrillingRigProperties.HEIGHT, () -> sizeRectangle.y);
     }
 
     @Override
@@ -92,6 +116,14 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
         this.energyContainer = CleanEnergyContainer.readNbt(nbt);
         this.chargedTicks = nbt.getInt("ChargedHardness");
+
+        this.leftBottomOffset.x = nbt.getInt("LeftBottomOffsetX");
+        this.leftBottomOffset.y = nbt.getInt("LeftBottomOffsetY");
+
+        this.sizeRectangle.x = nbt.getInt("SizeRectangleX");
+        this.sizeRectangle.y = nbt.getInt("SizeRectangleY");
+
+        this.needRecalculate = true;
     }
 
     @Override
@@ -108,6 +140,12 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
         this.energyContainer.writeNbt(nbt);
         nbt.putInt("ChargedHardness", this.chargedTicks);
+
+        nbt.putInt("LeftBottomOffsetX", leftBottomOffset.x);
+        nbt.putInt("LeftBottomOffsetY", leftBottomOffset.y);
+
+        nbt.putInt("SizeRectangleX", sizeRectangle.x);
+        nbt.putInt("SizeRectangleY", sizeRectangle.y);
     }
 
     @Override
@@ -148,6 +186,10 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         if (world.isClient || !(world instanceof ServerWorld serverWorld)) {
             return;
         }
+        if(blockEntity.needRecalculate) {
+            blockEntity.recalculateMingArea(pos, state);
+            blockEntity.needRecalculate = false;
+        }
         var hasEnergy = blockEntity.energyContainer.hasEnergy();
         var changed = false;
         var worked = state.get(AbstractDrillingRigBlock.WORKING);
@@ -164,34 +206,35 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         if (!toolStack.isEmpty()) {
             var toolItem = toolStack.getItem();
             if (toolItem instanceof MiningDrillItem miningDrillItem) {
-                var underLineBlockStatePos = getUnderlineBlock(world, pos);
+                var underLineBlockStatePos = getUnderlineBlock(world, blockEntity.currentPosition);
                 if (underLineBlockStatePos != null) {
                     var underLineBlockState = underLineBlockStatePos.getLeft();
                     var underLineBlockPos = underLineBlockStatePos.getRight();
                     int ticksToBreak = (int) (calcTicksToBreak(underLineBlockState, world, underLineBlockPos, toolStack) *
                                                 blockEntity.block.getMineSpeedMultiplier());
                     if (ticksToBreak <= blockEntity.chargedTicks) {
-                        var requiredEnergy = miningDrillItem.getEnergyPerMine() * blockEntity.block.getEnergyPerMineMultiplier();
-                        if(miningDrillItem.discharge(toolStack, (int) requiredEnergy)) {
-                            var miningItemStacks = underLineBlockState.getDroppedStacks(new LootContext.Builder(serverWorld)
-                                    .parameter(LootContextParameters.ORIGIN, underLineBlockPos.toCenterPos()).random(world.getRandom())
-                                    .parameter(LootContextParameters.TOOL, toolStack)
-                            );
-                            boolean enoughSpace = miningItemStacks.stream()
-                                    .allMatch(it -> it.isEmpty() || blockEntity.miningInventory.canInsert(it));
-                            if(enoughSpace) {
+                        var miningItemStacks = underLineBlockState.getDroppedStacks(new LootContext.Builder(serverWorld)
+                                .parameter(LootContextParameters.ORIGIN, underLineBlockPos.toCenterPos()).random(world.getRandom())
+                                .parameter(LootContextParameters.TOOL, toolStack)
+                        );
+                        boolean enoughSpace = miningItemStacks.stream()
+                                .allMatch(it -> it.isEmpty() || blockEntity.miningInventory.canInsert(it));
+                        if (enoughSpace) {
+                            var requiredEnergy = miningDrillItem.getEnergyPerMine() * blockEntity.block.getEnergyPerMineMultiplier();
+                            if (miningDrillItem.discharge(toolStack, (int) requiredEnergy)) {
                                 working = true;
                                 blockEntity.chargedTicks -= ticksToBreak;
                                 world.breakBlock(underLineBlockPos, false);
+                                goToNextBlock(blockEntity);
                                 boolean canHarvest = canHarvest(underLineBlockState, toolStack);
                                 for (var miningItemStack : miningItemStacks) {
                                     if (!miningItemStack.isEmpty() && canHarvest) {
                                         blockEntity.miningInventory.addStack(miningItemStack);
                                     }
                                 }
-                            } else {
-                                full = true;
                             }
+                        } else {
+                            full = true;
                         }
                     } else {
                         if(miningDrillItem.hasEnergy(toolStack)) {
@@ -199,6 +242,8 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                             working = true;
                         }
                     }
+                } else {
+                    goToNextBlock(blockEntity);
                 }
                 changed = true;
             }
@@ -221,10 +266,103 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
         }
     }
 
+    private static <T extends AbstractDrillingRigBlock> void goToNextBlock(
+            @NotNull AbstractDrillingRigBlockEntity<T> blockEntity) {
+        var currentPosition = blockEntity.currentPosition;
+        var startPos = blockEntity.startPosition;
+        var endPos = blockEntity.endPosition;
+        if (currentPosition.x + 1 >= endPos.x) {
+            if (currentPosition.z + 1 >= endPos.z) {
+                currentPosition.x = startPos.x;
+                currentPosition.z = startPos.z;
+            } else {
+                currentPosition.x = startPos.x;
+                currentPosition.z++;
+            }
+        } else {
+            currentPosition.x++;
+        }
+    }
+
+    public void moveLeftRight(boolean moveLeft) {
+        leftBottomOffset.x += moveLeft ? -1 : 1;
+        if(leftBottomOffset.x < -MAX_OFFSET) {
+            leftBottomOffset.x = -MAX_OFFSET;
+        } else if(leftBottomOffset.x > MAX_OFFSET) {
+            leftBottomOffset.x = MAX_OFFSET;
+        }
+        needRecalculate = true;
+    }
+
+    public void moveUpDown(boolean moveUp) {
+        leftBottomOffset.y += moveUp ? -1 : 1;
+        if(leftBottomOffset.y < -MAX_OFFSET) {
+            leftBottomOffset.y = -MAX_OFFSET;
+        } else if(leftBottomOffset.y > MAX_OFFSET) {
+            leftBottomOffset.y = MAX_OFFSET;
+        }
+        needRecalculate = true;
+    }
+
+    public void changeWidth(boolean increase) {
+        sizeRectangle.x += increase ? 1 : -1;
+        if(sizeRectangle.x <= 0) {
+            sizeRectangle.x = 1;
+        } else if(sizeRectangle.x > MAX_SIZE) {
+            sizeRectangle.x = MAX_SIZE;
+        }
+        needRecalculate = true;
+    }
+
+    public void changeHeight(boolean increase) {
+        sizeRectangle.y += increase ? 1 : -1;
+        if(sizeRectangle.y <= 0) {
+            sizeRectangle.y = 1;
+        } else if(sizeRectangle.y > MAX_SIZE) {
+            sizeRectangle.y = MAX_SIZE;
+        }
+        needRecalculate = true;
+    }
+
+    protected void recalculateMingArea(@NotNull BlockPos blockPos,
+                                       @NotNull BlockState blockState) {
+        var facing = blockState.get(AbstractDrillingRigBlock.FACING);
+        this.startPosition.set(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        this.endPosition.set(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+        if(facing == Direction.WEST) {
+            this.startPosition.x += this.leftBottomOffset.y;
+            this.startPosition.z += this.leftBottomOffset.x;
+            this.endPosition.set(this.startPosition);
+            this.endPosition.x += this.sizeRectangle.y;
+            this.endPosition.z += this.sizeRectangle.x;
+        } else if(facing == Direction.EAST) {
+            this.endPosition.x -= this.leftBottomOffset.y - 1;
+            this.endPosition.z -= this.leftBottomOffset.x - 1;
+            this.startPosition.set(this.endPosition);
+            this.startPosition.x -= this.sizeRectangle.y;
+            this.startPosition.z -= this.sizeRectangle.x;
+        } else if(facing == Direction.NORTH) {
+            this.startPosition.x -= this.leftBottomOffset.x + this.sizeRectangle.x - 1;
+            this.startPosition.z += this.leftBottomOffset.y;
+
+            this.endPosition.x -= this.leftBottomOffset.x - 1;
+            this.endPosition.z = this.startPosition.z + this.sizeRectangle.y;
+        } else if(facing == Direction.SOUTH) {
+            this.startPosition.x += this.leftBottomOffset.x;
+            this.startPosition.z -= this.leftBottomOffset.y + this.sizeRectangle.y - 1;
+
+            this.endPosition.x = this.startPosition.x + this.sizeRectangle.x;
+            this.endPosition.z -= this.leftBottomOffset.y - 1;
+        }
+
+        this.currentPosition.set(this.startPosition);
+    }
+
     protected static int calcTicksToBreak(@NotNull BlockState state,
-                                            @NotNull BlockView world,
-                                            @NotNull BlockPos pos,
-                                            @NotNull ItemStack toolStack) {
+                                          @NotNull BlockView world,
+                                          @NotNull BlockPos pos,
+                                          @NotNull ItemStack toolStack) {
         float hardness = state.getHardness(world, pos);
         if (hardness == -1.0f) {
             return 0;
@@ -282,7 +420,8 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
     }
 
     @Nullable
-    private static Pair<BlockState, BlockPos> getUnderlineBlock(@NotNull World world, @NotNull BlockPos blockPos) {
+    private static Pair<BlockState, BlockPos> getUnderlineBlock(@NotNull World world, @NotNull Vector3i currentPosition) {
+        var blockPos = new BlockPos(currentPosition.x, currentPosition.y, currentPosition.z);
         while (blockPos.getY() > world.getBottomY()) {
             blockPos = blockPos.down();
             var blockState = world.getBlockState(blockPos);
@@ -297,6 +436,7 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
 
     @Override
     public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+        buf.writeBlockPos(pos);
     }
 
     @Override
