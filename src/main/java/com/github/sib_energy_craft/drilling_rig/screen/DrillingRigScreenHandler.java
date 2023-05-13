@@ -1,6 +1,6 @@
 package com.github.sib_energy_craft.drilling_rig.screen;
 
-import com.github.sib_energy_craft.drilling_rig.load.Screens;
+import com.github.sib_energy_craft.drilling_rig.load.client.Screens;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.network.PacketByteBuf;

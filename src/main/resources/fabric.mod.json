@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "sec-mod-quarry",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "SibEnergyCraft - Quarry",
   "authors": [
     "sibmaks"
@@ -19,8 +19,10 @@
     "main": [
       "com.github.sib_energy_craft.drilling_rig.load.Blocks",
       "com.github.sib_energy_craft.drilling_rig.load.Entities",
-      "com.github.sib_energy_craft.drilling_rig.load.Items",
-      "com.github.sib_energy_craft.drilling_rig.load.Screens"
+      "com.github.sib_energy_craft.drilling_rig.load.Items"
+    ],
+    "client": [
+      "com.github.sib_energy_craft.drilling_rig.load.client.Screens"
     ]
   }
 }

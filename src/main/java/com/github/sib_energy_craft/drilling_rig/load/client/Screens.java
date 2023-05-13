@@ -1,9 +1,9 @@
-package com.github.sib_energy_craft.drilling_rig.load;
+package com.github.sib_energy_craft.drilling_rig.load.client;
 
 import com.github.sib_energy_craft.drilling_rig.screen.DrillingRigScreen;
 import com.github.sib_energy_craft.drilling_rig.screen.DrillingRigScreenHandler;
 import com.github.sib_energy_craft.energy_api.utils.Identifiers;
-import com.github.sib_energy_craft.sec_utils.load.DefaultModInitializer;
+import com.github.sib_energy_craft.sec_utils.load.DefaultClientModInitializer;
 import net.minecraft.screen.ScreenHandlerType;
 
 import static com.github.sib_energy_craft.sec_utils.utils.ScreenUtils.register;
@@ -12,7 +12,7 @@ import static com.github.sib_energy_craft.sec_utils.utils.ScreenUtils.register;
  * @since 0.0.1
  * @author sibmaks
  */
-public final class Screens implements DefaultModInitializer {
+public final class Screens implements DefaultClientModInitializer {
     public static final ScreenHandlerType<DrillingRigScreenHandler> DRILLING_RIG;
 
     static {
