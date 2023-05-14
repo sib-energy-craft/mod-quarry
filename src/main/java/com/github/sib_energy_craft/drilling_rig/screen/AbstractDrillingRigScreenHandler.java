@@ -4,6 +4,7 @@ import com.github.sib_energy_craft.drilling_rig.block.entity.AbstractDrillingRig
 import com.github.sib_energy_craft.drilling_rig.block.entity.DrillingRigProperties;
 import com.github.sib_energy_craft.energy_api.screen.ChargeSlot;
 import com.github.sib_energy_craft.energy_api.tags.CoreTags;
+import com.github.sib_energy_craft.sec_utils.screen.SlotsScreenHandler;
 import com.github.sib_energy_craft.sec_utils.screen.slot.*;
 import com.github.sib_energy_craft.sec_utils.utils.TagUtils;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,7 +23,7 @@ import org.joml.Vector2i;
  * @since 0.0.1
  * @author sibmaks
  */
-public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
+public abstract class AbstractDrillingRigScreenHandler extends SlotsScreenHandler {
     private static final DrillingRigScreenButton[] BUTTONS = DrillingRigScreenButton.values();
 
     private final Inventory miningInventory;
@@ -59,7 +60,13 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
         this.propertyDelegate = propertyDelegate;
         this.world = playerInventory.player.world;
         this.context = context;
+        this.slotGroupsMeta = buildSlots(playerInventory, toolInventory, miningInventory);
+        this.addProperties(propertyDelegate);
+    }
 
+    private @NotNull SlotGroupsMeta buildSlots(@NotNull PlayerInventory playerInventory,
+                                               @NotNull Inventory toolInventory,
+                                               @NotNull Inventory miningInventory) {
         int globalSlotIndex = 0;
         var slotGroupsBuilder = SlotGroupsMetaBuilder.builder();
 
@@ -113,9 +120,7 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
             slotGroupsBuilder.add(miningSlotGroup);
         }
 
-        slotGroupsMeta = slotGroupsBuilder.build();
-
-        this.addProperties(propertyDelegate);
+        return slotGroupsBuilder.build();
     }
 
     @Override
@@ -189,7 +194,7 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
             if(slotMeta != null) {
                 var slotType = slotMeta.getSlotType();
                 if (slotType == DrillingSlotTypes.TOOLS || slotType == DrillingSlotTypes.MINING) {
-                    if (!insertItem(slotStack, SlotTypes.QUICK_ACCESS, SlotTypes.PLAYER_INVENTORY)) {
+                    if (!insertItem(slotGroupsMeta, slotStack, SlotTypes.QUICK_ACCESS, SlotTypes.PLAYER_INVENTORY)) {
                         return ItemStack.EMPTY;
                     }
                 } else {
@@ -208,11 +213,11 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
                         }
                         if (!inserted) {
                             if (slotType == SlotTypes.QUICK_ACCESS) {
-                                if (!insertItem(slotStack, SlotTypes.PLAYER_INVENTORY)) {
+                                if (!insertItem(slotGroupsMeta, slotStack, SlotTypes.PLAYER_INVENTORY)) {
                                     return ItemStack.EMPTY;
                                 }
                             } else if (slotType == SlotTypes.PLAYER_INVENTORY) {
-                                if (!insertItem(slotStack, SlotTypes.QUICK_ACCESS)) {
+                                if (!insertItem(slotGroupsMeta, slotStack, SlotTypes.QUICK_ACCESS)) {
                                     return ItemStack.EMPTY;
                                 }
                             }
@@ -316,28 +321,5 @@ public abstract class AbstractDrillingRigScreenHandler extends ScreenHandler {
         });
     }
 
-    protected boolean insertItem(@NotNull ItemStack slotStack,
-                                 @NotNull SlotType to,
-                                 @NotNull SlotType... otherwise) {
-        if(insertItem(slotStack, to)) {
-            return true;
-        }
-        for (var slotType : otherwise) {
-            if(insertItem(slotStack, slotType)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected boolean insertItem(@NotNull ItemStack slotStack,
-                                 @NotNull SlotType to) {
-        var slotGroupMeta = this.slotGroupsMeta.getSlotGroupMeta(to);
-        if(slotGroupMeta == null) {
-            return false;
-        }
-        var globalRange = slotGroupMeta.getGlobalRange();
-        return insertItem(slotStack, globalRange.minIndex(), globalRange.maxIndex() + 1, false);
-    }
 }
 
