@@ -36,9 +36,7 @@ dependencies {
     modImplementation("com.github.sib-energy-craft:mod-energy-tools:${project.sec_mod_energy_tools_version}")
     modImplementation("com.github.sib-energy-craft:mod-metallurgy:${project.sec_mod_metallurgy_version}")
     modImplementation("com.github.sib-energy-craft:mod-energy-items:${project.sec_mod_energy_items_version}")
-
-    // test only
-    modImplementation("com.github.sib-energy-craft:mod-solar-panels:${project.sec_mod_solar_panels_version}")
+    modImplementation("com.github.sib-energy-craft:mod-machines:${project.sec_mod_machines_version}")
     modImplementation("com.github.sib-energy-craft:mod-pipes:${project.sec_mod_pipes_version}")
 }
 

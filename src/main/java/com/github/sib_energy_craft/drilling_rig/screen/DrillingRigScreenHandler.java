@@ -1,6 +1,6 @@
 package com.github.sib_energy_craft.drilling_rig.screen;
 
-import com.github.sib_energy_craft.drilling_rig.load.client.Screens;
+import com.github.sib_energy_craft.drilling_rig.load.ScreenHandlers;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.network.PacketByteBuf;
@@ -20,13 +20,13 @@ public class DrillingRigScreenHandler extends AbstractDrillingRigScreenHandler {
                                     @NotNull Inventory miningInventory,
                                     @NotNull PropertyDelegate propertyDelegate,
                                     @NotNull ScreenHandlerContext context) {
-        super(Screens.DRILLING_RIG, syncId, playerInventory, toolInventory, miningInventory, propertyDelegate, context);
+        super(ScreenHandlers.DRILLING_RIG, syncId, playerInventory, toolInventory, miningInventory, propertyDelegate, context);
     }
 
     public DrillingRigScreenHandler(int syncId,
                                     @NotNull PlayerInventory playerInventory,
                                     @NotNull PacketByteBuf packetByteBuf) {
-        super(Screens.DRILLING_RIG, syncId, playerInventory);
+        super(ScreenHandlers.DRILLING_RIG, syncId, playerInventory);
 
     }
 }

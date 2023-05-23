@@ -5,10 +5,11 @@ import com.github.sib_energy_craft.energy_api.EnergyLevel;
 import com.github.sib_energy_craft.energy_api.utils.Identifiers;
 import com.github.sib_energy_craft.sec_utils.common.Identified;
 import com.github.sib_energy_craft.sec_utils.load.DefaultModInitializer;
-import com.github.sib_energy_craft.sec_utils.utils.BlockUtils;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Material;
 import net.minecraft.sound.BlockSoundGroup;
+
+import static com.github.sib_energy_craft.sec_utils.utils.BlockUtils.register;
 
 
 /**
@@ -27,6 +28,6 @@ public final class Blocks implements DefaultModInitializer {
                 .sounds(BlockSoundGroup.METAL);
 
         var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.95f, 0.8f);
-        DRILLING_RIG = BlockUtils.register(Identifiers.of("drilling_rig"), drillingBlock);
+        DRILLING_RIG = register(Identifiers.of("drilling_rig"), drillingBlock);
     }
 }
