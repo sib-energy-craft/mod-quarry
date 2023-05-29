@@ -16,19 +16,37 @@ import org.jetbrains.annotations.NotNull;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DrillingRigTags {
+    /**
+     * Drilling rig must ignore blocks tagged with this tag when looking for a block to mine
+     */
     private static final TagKey<Block> DRILLING_RIG_IGNORE;
+    /**
+     * Drilling rig should skip position to mine in case if the underlying block is tagged with this tag
+     */
+    private static final TagKey<Block> DRILLING_RIG_SKIP;
 
     static {
         DRILLING_RIG_IGNORE = TagKey.of(RegistryKeys.BLOCK, Identifiers.of("drilling_rig_ignore"));
+        DRILLING_RIG_SKIP = TagKey.of(RegistryKeys.BLOCK, Identifiers.of("drilling_rig_skip"));
     }
 
     /**
-     * Check is item need to ignore on drilling rig mine
+     * Check is block need to ignore on drilling rig mine
      *
      * @param blockState block to check
      * @return true - not mine block, false - otherwise
      */
     public static boolean isDrillingRigIgnore(@NotNull BlockState blockState) {
         return TagUtils.hasTag(DRILLING_RIG_IGNORE, blockState);
+    }
+
+    /**
+     * Check is block need to skip on drilling rig mine
+     *
+     * @param blockState block to check
+     * @return true - skip, false - otherwise
+     */
+    public static boolean isDrillingRigSkip(@NotNull BlockState blockState) {
+        return TagUtils.hasTag(DRILLING_RIG_SKIP, blockState);
     }
 }

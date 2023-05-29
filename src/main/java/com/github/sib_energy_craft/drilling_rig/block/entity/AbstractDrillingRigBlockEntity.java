@@ -429,6 +429,9 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                     DrillingRigTags.isDrillingRigIgnore(blockState)) {
                 continue;
             }
+            if(DrillingRigTags.isDrillingRigSkip(blockState)) {
+                return null;
+            }
             return new Pair<>(blockState, blockPos);
         }
         return null;
