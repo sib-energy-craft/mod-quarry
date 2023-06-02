@@ -6,7 +6,7 @@ import com.github.sib_energy_craft.energy_api.utils.Identifiers;
 import com.github.sib_energy_craft.sec_utils.common.Identified;
 import com.github.sib_energy_craft.sec_utils.load.DefaultModInitializer;
 import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Material;
+import net.minecraft.block.MapColor;
 import net.minecraft.sound.BlockSoundGroup;
 
 import static com.github.sib_energy_craft.sec_utils.utils.BlockUtils.register;
@@ -21,8 +21,8 @@ public final class Blocks implements DefaultModInitializer {
     public static final Identified<DrillingRigBlock> DRILLING_RIG;
 
     static {
-        var drillSettings = AbstractBlock.Settings
-                .of(Material.METAL)
+        var drillSettings = AbstractBlock.Settings.create()
+                .mapColor(MapColor.IRON_GRAY)
                 .strength(1.5F)
                 .requiresTool()
                 .sounds(BlockSoundGroup.METAL);

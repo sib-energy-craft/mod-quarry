@@ -21,7 +21,7 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -213,10 +213,10 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
                     int ticksToBreak = (int) (calcTicksToBreak(underLineBlockState, world, underLineBlockPos, toolStack) *
                                                 blockEntity.block.getMineSpeedMultiplier());
                     if (ticksToBreak <= blockEntity.chargedTicks) {
-                        var miningItemStacks = underLineBlockState.getDroppedStacks(new LootContext.Builder(serverWorld)
-                                .parameter(LootContextParameters.ORIGIN, underLineBlockPos.toCenterPos()).random(world.getRandom())
-                                .parameter(LootContextParameters.TOOL, toolStack)
-                        );
+                        var builder = new LootContextParameterSet.Builder(serverWorld)
+                                .add(LootContextParameters.ORIGIN, underLineBlockPos.toCenterPos())
+                                .add(LootContextParameters.TOOL, toolStack);
+                        var miningItemStacks = underLineBlockState.getDroppedStacks(builder);
                         boolean enoughSpace = miningItemStacks.stream()
                                 .allMatch(it -> it.isEmpty() || blockEntity.miningInventory.canInsert(it));
                         if (enoughSpace) {

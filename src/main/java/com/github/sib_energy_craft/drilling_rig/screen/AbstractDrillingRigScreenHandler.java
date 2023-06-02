@@ -58,7 +58,7 @@ public abstract class AbstractDrillingRigScreenHandler extends SlotsScreenHandle
         checkDataCount(propertyDelegate, 6);
         this.miningInventory = miningInventory;
         this.propertyDelegate = propertyDelegate;
-        this.world = playerInventory.player.world;
+        this.world = playerInventory.player.getWorld();
         this.context = context;
         this.slotGroupsMeta = buildSlots(playerInventory, toolInventory, miningInventory);
         this.addProperties(propertyDelegate);
