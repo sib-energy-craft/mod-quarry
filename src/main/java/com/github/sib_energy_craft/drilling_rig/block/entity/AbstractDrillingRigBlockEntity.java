@@ -11,6 +11,7 @@ import com.github.sib_energy_craft.energy_tools.item.MiningDrillItem;
 import com.github.sib_energy_craft.pipes.api.ItemSupplier;
 import com.github.sib_energy_craft.pipes.utils.PipeUtils;
 import com.github.sib_energy_craft.sec_utils.screen.PropertyMap;
+import lombok.Getter;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -55,7 +56,9 @@ public abstract class AbstractDrillingRigBlockEntity<B extends AbstractDrillingR
     public static final int TOOLS_INVENTORY_SIZE = 2;
     public static final int MINING_INVENTORY_SIZE = 9;
 
+    @Getter
     protected final SimpleInventory toolInventory;
+    @Getter
     protected final SimpleInventory miningInventory;
     protected final PropertyMap<DrillingRigProperties> propertyMap;
 
