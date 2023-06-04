@@ -27,7 +27,7 @@ public final class Blocks implements DefaultModInitializer {
                 .requiresTool()
                 .sounds(BlockSoundGroup.METAL);
 
-        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.95f, 0.8f);
+        var drillingBlock = new DrillingRigBlock(drillSettings, EnergyLevel.L3, 1024,0.95f, 1.2f);
         DRILLING_RIG = register(Identifiers.of("drilling_rig"), drillingBlock);
     }
 }
