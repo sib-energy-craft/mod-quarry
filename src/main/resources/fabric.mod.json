@@ -1,19 +1,18 @@
 {
   "schemaVersion": 1,
   "id": "sec-mod-quarry",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "name": "SibEnergyCraft - Quarry",
   "authors": [
     "sibmaks"
   ],
   "contact": {},
   "license": "MIT",
-  "icon": "assets/sib_energy_craft/icon.png",
   "environment": "*",
   "depends": {
     "fabricloader": ">=0.14.21",
     "fabric": "*",
-    "minecraft": "1.20-rc.1"
+    "minecraft": "1.20"
   },
   "entrypoints": {
     "main": [
